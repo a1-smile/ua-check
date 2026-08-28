@@ -1,6 +1,6 @@
 <?php
 /*
-student/student_test/test-write-ua-scores.php
+C:\dev\ua-check\tests\no-unit-test-write-ua-score.php
 では、
 student/write-ua.php
 に定義されている
