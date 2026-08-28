@@ -41,7 +41,7 @@ tests\test-write-ua-score.php
 PHPUnit を使って実装することにてきしていますか？
 
 はい、test-write-ua-score.php の目的は PHPUnit に適しています。
-WriteUa::writeUaScores() が実際に
+WriteUaのメソッドwriteUaScores() が実際に
 ua_scores テーブルへ正しい 
 session/IP レコードを書き込むかを検証しているため、
 これは PHPUnit で管理しやすい結合テストです。
@@ -67,6 +67,11 @@ DB 接続と TRUNCATE を setUp() に置く
 ```php
 <?php
 
+//  PHPUnit\Framework\TestCase
+//  というクラス名を TestCase として
+//  使うための宣言です。
+//  以下 TestCase と書かれた部分は 
+//  PHPUnit\Framework\TestCase を指します。
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../src/common/dbmanager.php';
@@ -137,8 +142,10 @@ final class WriteUaScoresTest extends TestCase
             $riskEvaluator
         );
 
+        //  実際に UA スコアをDBに書き込む処理を実行する
         $writeUa->writeUaScores();
 
+        //  SQL文を準備する
         $statement = $this->pdo->prepare(
             'SELECT subject_key, subject_type, score
              FROM ua_scores
@@ -161,12 +168,13 @@ final class WriteUaScoresTest extends TestCase
         $this->assertSame('ip', $ipRow['subject_type']);
         $this->assertSame(1, (int) $ipRow['score']);
 
+        //  ua_scores テーブルのレコード数を取得する
         $count = (int) $this->pdo
             ->query('SELECT COUNT(*) FROM ua_scores')
             //  カウント数が格納される。
             ->fetchColumn();
             //  一行目の一列目を取り出す。
-
+        //  期待されるレコード数と比較する
         $this->assertSame(2, $count);
     }
 }
@@ -195,10 +203,14 @@ FLUSH PRIVILEGES;
 CREATE TABLE test_student.ua_scores LIKE school.ua_scores;
 ```
 
-重要なのは、dbmanager.php の接続先を常に test_student に固定しないことです。アプリケーション本体が誤ってテスト DB を使ってしまいます。PHPUnit 用の専用 TestDatabaseManager を作るか、環境変数 DB_NAME=test_student を PHPUnit 実行時だけ渡す構成が安全です。
+重要なのは、dbmanager.php の接続先を常に
+ test_student に固定しないことです。
+ アプリケーション本体が誤ってテスト DB を使ってしまいます。
+ PHPUnit 用の専用 TestDatabaseManager を作るか、
+ 環境変数 DB_NAME=test_student を PHPUnit 実行時だけ渡す構成が安全です。
 
-また、メモ内の SQL コードブロックは閉じ忘れがあります。MySQL に投入する SQL はコメントを外して、次のように分けると安全です。s
-
+ということは、本番環境とテスト環境で接続先を切り替える仕組みが必要です。
+テスト時には、.env ファイルの環境変数を書き換える。という理解であっていますか？
 
 
 # 環境変数の設定
@@ -247,3 +259,71 @@ DB_PASSWORD =
 こちらは、git 管理対象に含めます。
 
 gitignore も コミットする。
+
+# dotenv の使用
+dotenv をインストールしまして、
+環境変数を読み込むことを確認しました。
+
+phpunit.xml で環境変数を上書きする方法
+について初心者に解説おねがいします。
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="tests/bootstrap.php" colors="true">
+  <testsuites>
+    <testsuite name="App Test Suite">
+      <directory>tests</directory>
+    </testsuite>
+  </testsuites>
+
+  <php>
+    <env name="APP_ENV" value="testing" force="true"/>
+    <env name="DB_HOST" value="localhost" force="true"/>
+    <env name="DB_NAME" value="test_student" force="true"/>
+    <env name="DB_USER" value="ua_check_test" force="true"/>
+    <env name="DB_PASSWORD" value="test_only_password" force="true"/>
+  </php>
+</phpunit>
+```
+
+bootstrap.php
+```
+<?php
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+$dotenv->safeLoad(); // .env がなくても落ちない
+```
+
+DBManager class では、環境変数から接続情報を取得するようにします。
+```
+<?php
+$dbHost = $_ENV['DB_HOST'] ?? 'localhost';
+$dbName = $_ENV['DB_NAME'] ?? 'school';
+$dbUser = $_ENV['DB_USER'] ?? 'root';
+$dbPass = $_ENV['DB_PASSWORD'] ?? '';
+
+$pdo = new PDO(
+    "mysql:host={$dbHost};dbname={$dbName};charset=utf8mb4",
+    $dbUser,
+    $dbPass
+);
+```
+
+phpunit.xml と bootstrap.php を
+プロジェクトディレクトリのいちばんうえに作成して、
+DBManagerを書き換えればよろしいでしょうか？
+DBManagerには
+Dotenv を使って環境変数を読み込む処理を追加する必要がありますか？
+
+いいえ、
+むしろ、env.php や bootstrap.php 
+で環境変数を読み込むようにしておけば、
+DBManager では特に Dotenv を使う必要はありません。
+
+index.php などのエントリポイントで
+```
+require_once __DIR__ . '/bootstrap.php';
+//または、
+//require_once __DIR__ . '/env.php'; // 必要に応じて環境変数を読み込む
+require_once __DIR__ . '/dbmanager.php';

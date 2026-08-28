@@ -3,6 +3,11 @@
 
 class DBManager
 {
+    //  データベース接続情報を環境変数から取得
+    private $dbHost;
+    private $dbName;
+    private $dbUser;
+    private $dbPass;
     //  プロパティーの定義
     //  データベースアクセス情報
     private $access_info;
@@ -19,9 +24,14 @@ class DBManager
     //  コンストラクタ
     public function __construct()
     {
-        $this->access_info = 'mysql:host=localhost;dbname=test_student;charset=utf8mb4';
-        $this->user = 'ua_check_test';
-        $this->password = 'test_only_password';
+        $this->dbHost = $_ENV['DB_HOST'] ?? 'localhost';
+        $this->dbName = $_ENV['DB_NAME'] ?? 'test_student';
+        $this->dbUser = $_ENV['DB_USER'] ?? 'ua_check_test';
+        $this->dbPass = $_ENV['DB_PASSWORD'] ?? 'test_only_password';
+
+        $this->access_info = "mysql:host={$this->dbHost};dbname={$this->dbName};charset=utf8mb4";
+        $this->user = $this->dbUser;
+        $this->password = $this->dbPass;
     }
     //  データベースに接続するメソッド
     public function connect()
