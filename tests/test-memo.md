@@ -327,3 +327,14 @@ require_once __DIR__ . '/bootstrap.php';
 //または、
 //require_once __DIR__ . '/env.php'; // 必要に応じて環境変数を読み込む
 require_once __DIR__ . '/dbmanager.php';
+
+# tests/.env から環境変数を読み込むように変更
+tests/.env を作成しました。
+.gitignore に tests/.env を追加 。
+
+phpunit.xml は bootstrap.php を読み込むように設定しています。
+phpunit.xml から環境変数の記述を削除し、bootstrap.php で読み込むように変更しました。
+
+phpunit.xml と、
+bootstrap.php と
+tests/.env の記述は合っていますか？
