@@ -1,10 +1,18 @@
 <?php
 
-require_once __DIR__ . '/vendor/autoload.php';
+//  Composer がインストールしたクラスを
+//  使えるようにする記述
+require 'vendor/autoload.php';
 
-use Dotenv\Dotenv;
+//  Dotenv\Dotenv は Dotenv という名前空間
+//  にある Dotenv というクラスという意味。
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+try {
+    $dotenv->load();
+} catch (Dotenv\Exception\InvalidPathException $e) {
+exit('.env ファイルが見つかりません')
+} catch (Dotenv\Exception\InvalidFileException $e) {
+    exit('.env ファイルの形式が正しくありません。');
+}
 
-$dotenv = Dotenv::createImmutable(__DIR__);
-$dotenv->load();
-
-echo $_ENV['DB_HOST'] . "\n";
+echo $_ENV['DB_HOST']. "\n";
