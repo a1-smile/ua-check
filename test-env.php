@@ -10,9 +10,9 @@ $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 try {
     $dotenv->load();
 } catch (Dotenv\Exception\InvalidPathException $e) {
-exit('.env ファイルが見つかりません')
+    exit('.env ファイルが見つかりません');
 } catch (Dotenv\Exception\InvalidFileException $e) {
     exit('.env ファイルの形式が正しくありません。');
 }
 
-echo $_ENV['DB_HOST']. "\n";
+echo $_ENV['DB_HOST'] . "\n";
