@@ -6,12 +6,17 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 //  Dotenv\Dotenv は Dotenv という名前空間
 //  にある Dotenv というクラスという意味。
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+use Dotenv\Dotenv;
+use Dotenv\Exception\InvalidFileException;
+use Dotenv\Exception\InvalidPathException;
+use Dotenv\Exception\ValidationException;
+
+$dotenv = Dotenv::createImmutable(__DIR__);
 try {
     $dotenv->load();
-} catch (Dotenv\Exception\InvalidPathException $e) {
+} catch (InvalidPathException $e) {
     exit('.env ファイルが見つかりません');
-} catch (Dotenv\Exception\InvalidFileException $e) {
+} catch (InvalidFileException $e) {
     exit('.env ファイルの形式が正しくありません。');
 }
 
@@ -23,7 +28,7 @@ try {
         'DB_USER',
         'DB_PASSWORD',
     ])->notEmpty();
-} catch (Dotenv\Exception\ValidationException $e) {
+} catch (ValidationException $e) {
     error_log($e->getMessage());
     exit('必須の環境変数が設定されていません: ');
 }
